@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smitingen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#fff; --ink:#000; --muted:#000; --water:#0a84ff; --water-light:#a8d3ff; --off:#f7f7f7;
+  --line:rgba(0,0,0,.14); --mark:#ff3d00; --sector:rgba(10,132,255,.16);
+  --wave:#0a24b8; --wind:#000;
+  /* Radfärger i timtabellen. Namnen följer stjärnorna: green=1, lorange=2, dorange=3, red=4, purple=5.
+     Nuvarande skala: #defdd7 #bdfbaf #9bf886 #7af65e #2fe504 (1–5 stjärnor).
+     Föregående: 1–3 stjärnor neongrön #39ff14, 4–5 neonrosa #ff2bd6.
+     Tidigare skala (ljusblå till neongrön): #d4efff #a6dcff #9cff8a #6aff4f #39ff14
+     Ursprungliga färger: green #39ff14, lorange #ffc21a, dorange #ff7a00, red #ff2d55, purple #b44dff */
+  --g-blue:#f9f9f9; --g-green:#defdd7; --g-lorange:#bdfbaf; --g-dorange:#9bf886; --g-red:#7af65e; --g-purple:#2fe504;
+  /* Kompassens pil */
+  --c-good:#39ff14;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{font-size:110%; -webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:400 1rem/1.45 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-variant-numeric:tabular-nums;
+}
+main{width:90%; max-width:1200px; margin:0 auto; padding:calc(2.5rem + 100px) 1.25rem 3rem}
+header{display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:1.5rem 3rem; padding-bottom:1.5rem}
+h1,h2,h3{font-weight:400; letter-spacing:-.07em}
+b{font-weight:400}
+h1{margin:3.2rem 0 0; font-weight:500; font-size:clamp(3.5rem,14vw,8rem); line-height:1}
+.sub{margin:.35rem 0 0; color:var(--muted)}
+h1{margin-bottom:1.5rem}
+.titleblock{width:100%}
+.sub{display:flex; justify-content:flex-start; align-items:baseline; flex-wrap:wrap; gap:.5rem 1.5rem; font-size:.8rem; text-transform:uppercase; margin:0; position:absolute; top:20px}
+.sub p{margin:0; display:flex; align-items:baseline; gap:.5rem 1.2rem; flex-wrap:wrap}
+.sub strong{font-weight:600}
+.sub #updated{color:#777}
+button.linkbtn{font:inherit; text-transform:inherit; color:var(--ink); background:none; border:0; border-radius:0; padding:0; text-decoration:underline; text-underline-offset:.2em; cursor:pointer}
+button.linkbtn:hover{background:none; color:var(--ink); text-decoration-thickness:2px}
+.meta{position:absolute; top:1.25rem; right:1.25rem; display:flex; align-items:center; gap:.9rem; color:var(--muted); font-size:.9rem}
+button{
+  font-family:inherit; font-size:.9rem; font-weight:400; line-height:1; color:var(--ink); background:transparent;
+  border:1.5px solid var(--ink); border-radius:999px; padding:.6rem 1.1rem; cursor:pointer;
+}
+button:hover{background:var(--ink); color:var(--bg)}
+button:focus-visible{outline:3px solid var(--water); outline-offset:3px}
+
+.spot{padding:2rem 0}
+.left h2{margin:0; font-size:1.7rem}
+.side{width:130px; flex:none}
+.compass{display:block; width:100%; max-width:130px; height:auto}
+
+.comps{display:none; flex-wrap:wrap; gap:.4rem 2rem; margin:-.5rem 0 1.5rem; font-size:.75em; color:#777}
+.comps span{display:inline-flex; align-items:center; gap:.35rem}
+.comps b{font-weight:600; color:var(--ink); text-transform:uppercase}
+.comps .warrow{color:#777}
+.topstats{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1.5rem 2.5rem; margin-bottom:1.75rem}
+.stats{display:contents}
+.stat b{font-size:3.2rem; line-height:1}
+.stat span.cdetail{margin-top:0}
+.stat small.offs{position:relative; top:-1.4em; font-size:.7em}
+.stat small{margin-left:.25rem; color:var(--muted)}
+.stat span{display:flex; align-items:center; gap:.35rem; margin-top:.2rem; color:#777; font-size:.75em; text-transform:uppercase}
+.warrow{width:.95em; height:.95em; color:var(--ink)}
+h3{margin:0 0 .4rem; font-size:1rem}
+.chart svg{overflow:visible}
+.chart{width:100%; margin-bottom:calc(.4rem + 10px)}
+.chart svg{display:block}
+.legend{display:flex; flex-wrap:wrap; align-items:center; gap:.4rem 1.2rem; margin:0 0 1.5rem; color:var(--muted); font-size:.85rem}
+.right .legend{color:#777; font-size:.75em; text-transform:uppercase}
+.legend i{display:inline-block; width:.8rem; height:.8rem; margin-right:.4rem; border-radius:2px; background:var(--off); vertical-align:-.05rem}
+.legend i.on{background:var(--water)}
+.err{margin:0; color:var(--muted)}
+footer{margin-top:3rem; padding-top:1.75rem; border-top:1px solid var(--line)}
+footer h2{margin:0 0 .75rem; font-size:1.5rem}
+.note{margin:1rem 0 0; font-size:.85rem; max-width:62ch}
+
+.hourly{margin-top:calc(1.5rem + 40px)}
+.day{margin-top:1.5rem}
+.day h3{position:sticky; top:0; z-index:1; margin:0; padding:.6rem 0; background:var(--bg); font-size:1em}
+.tablewrap{overflow-x:auto}
+table{table-layout:fixed; width:100%; min-width:760px; border-collapse:separate; border-spacing:0 2px; font-size:.95rem}
+th.daytitle{font-size:1rem; font-weight:600; color:var(--ink); letter-spacing:-.02em; text-transform:uppercase}
+/* Fasta kolumnbredder så att alla dagars tabeller får identiska kolumner */
+.hourly th:nth-child(1){width:22%}
+.hourly th:nth-child(2){width:19%}
+.hourly th:nth-child(3){width:17%}
+.hourly th:nth-child(4){width:15%}
+.hourly th:nth-child(5){width:14%}
+.hourly th:nth-child(6){width:13%}
+th:not(.daytitle){text-transform:uppercase}
+th{white-space:nowrap; padding:.5rem calc(.6rem + 10px); text-align:right; font-weight:400; font-size:.85rem; color:var(--muted)}
+td{padding:calc(.45rem + 10px) calc(.6rem + 10px); text-align:right}
+th:first-child, td:first-child{text-align:left; white-space:nowrap}
+tr.c-blue td{background:var(--g-blue)}
+tr.c-green td{background:var(--g-green)}
+tr.c-lorange td{background:var(--g-lorange)}
+tr.c-dorange td{background:var(--g-dorange)}
+tr.c-red td{background:var(--g-red)}
+tr.c-purple td{background:var(--g-purple)}
+td.stars{white-space:nowrap; letter-spacing:.08em}
+.legend i.c-blue{background:var(--g-blue); box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.legend i.c-green{background:var(--g-green)}
+.legend i.c-lorange{background:var(--g-lorange)}
+.legend i.c-dorange{background:var(--g-dorange)}
+.legend i.c-red{background:var(--g-red)}
+.legend i.c-purple{background:var(--g-purple)}
+
+.wx{display:flex; align-items:center; justify-content:flex-end; gap:.5rem; white-space:nowrap}
+.wicon{width:34px; height:34px; flex:none}
+.wx .tarrow{margin-left:0}
+.offtag{background:#fff; padding:3px; border-radius:2px; font-size:.7em; line-height:1; color:var(--ink); white-space:nowrap}
+.wx .per{color:rgba(0,0,0,.6); font-size:.7em; position:relative; top:-.6em; margin-left:-.25rem}
+.stat b.wxb{display:inline-flex; align-items:center; gap:.3em}
+.stat b.wxb .wicon{width:1em; height:1em}
+.tarrow{display:block; width:24px; height:24px; margin-left:auto}
+.chart{cursor:ew-resize; touch-action:pan-y; user-select:none; -webkit-user-select:none}
+.chart:focus-visible{outline:3px solid var(--water); outline-offset:2px}
+.when{position:absolute; left:0; bottom:0; margin:0; font-size:.8rem; font-weight:600; color:var(--ink); text-transform:uppercase; white-space:nowrap}
+.charthead{position:relative; height:1.2rem; margin-bottom:15px}
+.hint{margin:0; color:var(--muted); font-size:.85rem}
+.testbar{margin:0 0 1.25rem; padding:.8rem 1rem; border:2px solid var(--mark); border-radius:8px}
+.testbar small{display:block; margin-top:.3rem; color:var(--muted)}
+
+@media (max-width:720px){
+  html{font-size:100%}
+  main{width:94%; padding-top:calc(1.5rem + 60px)}
+  h1{margin-top:2rem}
+  /* De fyra värdena döljs; den stora kompassen visar våghöjd och riktning */
+  .stats{display:none}
+  .comps{display:flex}
+  .topstats{justify-content:center}
+  .side{width:min(260px,70vw)}
+  .compass{max-width:none}
+}
+@media (max-width:860px){
+  /* Tabellen ryms utan sidscroll: tätare celler, mindre text, Period döljs */
+  table{min-width:0; font-size:.85rem}
+  th,td{padding:.55rem .15rem}
+  th{font-size:.72rem}
+  .per{display:none}
+  .offword{display:none}
+  th.daytitle{font-size:.95rem}
+  th.daytitle{white-space:normal}
+  .hourly th:nth-child(1){width:21%}
+  .hourly th:nth-child(2){width:15%}
+  .hourly th:nth-child(3){width:13%}
+  .hourly th:nth-child(4){width:19%}
+  .hourly th:nth-child(5){width:14%}
+  .hourly th:nth-child(6){width:18%}
+  td:first-child,th:first-child{padding-left:.5rem}
+  td:last-child{padding-right:.5rem}
+  .wx{gap:.3rem}
+  .wicon{width:24px; height:24px}
+  .tarrow{width:17px; height:17px}
+  td.stars{letter-spacing:0; font-size:.6rem}
+}
+@media (max-width:380px){
+  .nu{display:none}
+}
+@media (max-width:400px){
+  table{font-size:.78rem}
+  th{font-size:.68rem}
+  th.daytitle{font-size:.85rem}
+  th{letter-spacing:-.02em}
+  .offtag{padding:2px; font-size:.62em}
+  .wicon{width:20px; height:20px}
+  .tarrow{width:14px; height:14px}
+  .wx{gap:.1rem}
+  th,td{padding-left:.1rem; padding-right:.1rem}
+}
+
+/* Kompakt desktop: bärbara/XDR-skärmar där diagrammet annars hamnar under vecket.
+   Större skärmar (högre än 1050 px) behåller den ursprungliga designen. */
+@media (min-width:861px) and (max-height:1050px){
+  html{font-size:90%}
+  main{padding-top:40px; padding-bottom:2rem}
+  h1{margin:1.4rem 0 .8rem; font-size:clamp(3rem,10vw,8rem)}
+  header{padding-bottom:0}
+  .spot{padding:1rem 0 2rem}
+  .topstats{margin-bottom:1rem; gap:1rem 2rem}
+  .stat b{font-size:2.4rem}
+  .side{width:96px}
+  .chart{margin-bottom:.4rem}
+  .right .legend{margin-top:.2rem}
+  .hourly{margin-top:1.6rem}
+  td{padding-top:calc(.45rem + 4px); padding-bottom:calc(.45rem + 4px)}
+}
+</style>
+</head>
+<body>
+<main>
+  <div id="banner"></div>
+  <header>
+    <div class="titleblock">
+      <div class="sub">
+        <p class="subr"><span id="updated">7-dygnsprognos, hämtar data…</span><button id="reload" class="linkbtn" type="button">Uppdatera nu</button></p>
+      </div>
+      <h1>Smitingen</h1>
+
+    </div>
+  </header>
+  <div id="spots" aria-live="polite"></div>
+  <footer>
+    <h2>Förklaringar</h2>
+    <p class="legend"><b>Vågor från 90–225°:</b>
+      <span><i class="c-green"></i>0,9–1,1 m ★</span>
+      <span><i class="c-lorange"></i>1,1–1,3 m ★★</span>
+      <span><i class="c-dorange"></i>1,3–1,6 m ★★★</span>
+      <span><i class="c-red"></i>1,6–2,0 m ★★★★</span>
+      <span><i class="c-purple"></i>över 2 m ★★★★★</span></p>
+    <p class="legend"><b>Vågor från 0–45°:</b>
+      <span><i class="c-red"></i>1,7–2,0 m ★★★★</span>
+      <span><i class="c-purple"></i>över 2 m ★★★★★</span></p>
+    <p class="legend"><span><i class="c-blue"></i>Övriga timmar</span></p>
+    <p class="legend"><b>Buffertzon utanför intervallen:</b>
+      <span>1–10° utanför: ett stjärnsteg lägre</span>
+      <span>11–20° utanför: två stjärnsteg lägre</span>
+      <span>~ = betyget är sänkt på grund av vågriktningen</span></p>
+    <p class="note">Prognosdata från Open-Meteo. Vågmodellen har ungefär 5 km upplösning, så vågor nära land kan avvika. Vågriktning anges som varifrån vågorna kommer.<span id="wxsrc"></span></p>
+  </footer>
+</main>
+
+<script>
+// ---- Konfiguration: samma spots som i surf_logger.py ----
+const SPOTS = [
+  {name:"Smitingen", lat:62.58934484895997, lon:18.044466489419893, from:90, to:225, big:{from:0, to:45}}
+];
+const TZ = "Europe/Stockholm";
+const DAYS = 7;
+const REFRESH_MINUTES = 30;
+
+// Betyg (färg + stjärnor) i timtabellen.
+// GRADES: för varje vågriktningsintervall (grader) gäller den första nivån där
+// våghöjden (avrundad till en decimal, som i tabellen) är minst "min".
+// Nivåerna är [min, stjärnor] och ska ligga i fallande ordning.
+// Färgen följer alltid antalet stjärnor (se STAR_CLS).
+const GRADES = [
+  {from:90, to:225, levels:[[2.1,5],[1.6,4],[1.3,3],[1.1,2],[0.9,1]]},
+  {from:0,  to:45,  levels:[[2.1,5],[1.7,4]]}
+];
+// Buffertzon utanför intervallet: [högst så många grader utanför, avdrag i stjärnor].
+// Bortom sista steget ger riktningen inget betyg.
+const BUFFER = [[10,1],[20,2]];
+const STAR_CLS = [null,"green","lorange","dorange","red","purple"];
+// Ändrar du något här, uppdatera också teckenförklaringen i sidfoten ("Förklaringar").
+
+const angDiff = (a,b) => { const x = Math.abs(a-b)%360; return x>180 ? 360-x : x; };
+function outsideBy(d,from,to){
+  if (inWin(d,from,to)) return 0;
+  return Math.min(angDiff(d,from), angDiff(d,to));
+}
+function grade(r){
+  const none = {cls:"blue", stars:0, reduced:false};
+  if (r.h==null || r.d==null) return none;
+  const h = Math.round(r.h*10)/10;
+  const d = Math.round(r.d)%360;
+  let best = none;
+  for (const g of GRADES){
+    const lvl = g.levels.find(([min])=>h>=min);
+    if (!lvl) continue;
+    const out = outsideBy(d,g.from,g.to);
+    let penalty = 0;
+    if (out>0){
+      const step = BUFFER.find(([width])=>out<=width);
+      if (!step) continue;
+      penalty = step[1];
+    }
+    const stars = lvl[1]-penalty;
+    if (stars>best.stars) best = {cls:STAR_CLS[stars], stars, reduced:penalty>0};
+  }
+  return best;
+}
+
+// ---- Testläge: öppna sidan med #test i adressen för fejkad data ----
+// Varje fall: [vågriktning °, våghöjd m, förväntad färg, förväntade stjärnor, 1 om betyget ska vara sänkt (~)]
+const TEST = /test/.test(location.search + location.hash);
+const TEST_CASES = [
+  // 90–225°, rakt i intervallet: alla nivåer och gränser
+  [120,0.8,"blue",0],[120,0.9,"green",1],[120,1.0,"green",1],[120,1.1,"lorange",2],
+  [120,1.2,"lorange",2],[120,1.3,"dorange",3],[120,1.5,"dorange",3],[120,1.6,"red",4],
+  [120,2.0,"red",4],[120,2.1,"purple",5],[120,3.2,"purple",5],
+  // avrundning av våghöjd (tabellen visar en decimal)
+  [120,0.89,"green",1],[120,1.04,"green",1],[120,1.09,"lorange",2],[120,1.24,"lorange",2],
+  [120,1.29,"dorange",3],[120,1.59,"red",4],[120,2.04,"red",4],[120,2.06,"purple",5],
+  // riktningsgränser inne i intervallet (1,5 m = 3 stjärnor)
+  [90,1.5,"dorange",3],[89.6,1.5,"dorange",3],[225,1.5,"dorange",3],[225.4,1.5,"dorange",3],
+  [158,1.5,"dorange",3],[180,1.5,"dorange",3],[200,2.5,"purple",5],
+  // buffertzon vid 90° (–1 stjärna 1–10° utanför, –2 stjärnor 11–20°)
+  [89,1.5,"lorange",2,1],[80,1.5,"lorange",2,1],[79,1.5,"green",1,1],[70,1.5,"green",1,1],[69,1.5,"blue",0],
+  // buffertzon vid 225°
+  [225.6,1.5,"lorange",2,1],[226,1.5,"lorange",2,1],[235,1.5,"lorange",2,1],
+  [236,1.5,"green",1,1],[245,1.5,"green",1,1],[246,1.5,"blue",0],
+  // buffertzon med andra våghöjder (stjärnor under 1 ger inget betyg)
+  [89,0.8,"blue",0],[89,1.0,"blue",0],[89,1.1,"green",1,1],[80,2.5,"red",4,1],
+  [79,2.5,"dorange",3,1],[69,2.5,"blue",0],[236,2.5,"dorange",3,1],
+  // 0–45°
+  [10,1.6,"blue",0],[10,1.7,"red",4],[10,2.0,"red",4],[10,2.1,"purple",5],[10,3.0,"purple",5],
+  [0,1.8,"red",4],[45,1.8,"red",4],[359.6,1.8,"red",4],
+  // buffertzon vid 45° och 0° (över norr)
+  [46,1.8,"dorange",3,1],[55,1.8,"dorange",3,1],[56,1.8,"lorange",2,1],[65,1.8,"lorange",2,1],[66,1.8,"blue",0],
+  [359,1.8,"dorange",3,1],[350,1.8,"dorange",3,1],[349,1.8,"lorange",2,1],[340,1.8,"lorange",2,1],[339,1.8,"blue",0],
+  [50,2.5,"red",4,1],[50,1.6,"blue",0],
+  // övriga riktningar och låga vågor
+  [250,1.0,"blue",0],[270,2.5,"blue",0],[300,1.0,"blue",0],[120,0.3,"blue",0],[20,0.5,"blue",0]
+];
+const TEST_WX = [
+  {icon:"sun",text:"Klart"},{icon:"sunCloud",text:"Växlande molnighet"},{icon:"cloud",text:"Mulet"},
+  {icon:"fog",text:"Dimma"},{icon:"rain",text:"Regn"},{icon:"thunder",text:"Åska"},
+  {icon:"sleet",text:"Snöblandat regn"},{icon:"snow",text:"Snöfall"}
+];
+function makeTestRows(){
+  const today = new Date().toLocaleDateString("sv-SE",{timeZone:TZ});
+  const rows = [];
+  for (let d=0; d<DAYS; d++) for (let h=0; h<24; h++){
+    const i = d*24+h, [dir,hgt,cls,stars,red] = TEST_CASES[i%TEST_CASES.length];
+    const ws = 3+12*Math.abs(Math.sin(i/9));
+    rows.push({t:`${addDay(today,d)}T${String(h).padStart(2,"0")}:00`, h:hgt, d:dir,
+      p:3+(i%5),
+      ww:{h:+(hgt*.85).toFixed(2), d:dir, p:3+(i%4)},
+      sw:{h:+(hgt*.35*Math.abs(Math.sin(i/13))).toFixed(2), d:(dir+40)%360, p:8+(i%4)},
+      ws, wd:(i*7)%360, wg:ws*1.4, exp:[cls,stars,!!red],
+      day:h>=8&&h<16, tmp:-5+(i%17), wx:TEST_WX[i%TEST_WX.length]});
+  }
+  return rows;
+}
+function renderBanner(){
+  const el = $("#banner");
+  if (!TEST){ el.innerHTML = ""; return; }
+  let ok = 0; const bad = [];
+  state.forEach(res=>(res.rows||[]).forEach(r=>{
+    const g = grade(r);
+    if (g.cls===r.exp[0] && g.stars===r.exp[1] && g.reduced===r.exp[2]) ok++;
+    else bad.push(r.t.slice(8,10)+"/"+r.t.slice(5,7)+" kl "+r.t.slice(11,16));
+  }));
+  el.innerHTML = `<div class="testbar">Testläge: all data på sidan är fejkad.
+    ${ok} av ${ok+bad.length} timmar får förväntad färg, förväntade stjärnor och förväntad ~-markering.${bad.length?` Avvikelser: ${bad.slice(0,8).join(", ")}.`:""}
+    <small>Ta bort #test ur adressen och ladda om sidan för att se den riktiga prognosen.</small></div>`;
+}
+
+// ---- Hjälpfunktioner ----
+const DIRS = ["N","NNO","NO","ONO","O","OSO","SO","SSO","S","SSV","SV","VSV","V","VNV","NV","NNV"];
+const dirName = d => d==null ? "–" : DIRS[Math.round((((d%360)+360)%360)/22.5)%16];
+const fmt = (v,n=1) => v==null ? "–" : v.toFixed(n).replace(".",",");
+const inWin = (d,a,b) => {
+  if (d==null) return false;
+  d = ((d%360)+360)%360;
+  return a<=b ? (d>=a && d<=b) : (d>=a || d<=b);
+};
+const pt = (a,r) => {
+  const t = a*Math.PI/180;
+  return [60+r*Math.sin(t), 60-r*Math.cos(t)].map(v=>v.toFixed(2));
+};
+const $ = s => document.querySelector(s);
+const getJSON = async (url,p) => {
+  const r = await fetch(url+"?"+new URLSearchParams(p));
+  if (!r.ok) throw new Error("HTTP "+r.status);
+  return r.json();
+};
+
+let wxSource = "";
+
+// Vädersymboler (enkla linjeikoner, 24x24)
+const CLOUD = '<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>';
+const MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+const DOTS = (pts) => pts.map(([x,y])=>`<circle cx="${x}" cy="${y}" r=".95" fill="currentColor" stroke="none"/>`).join("");
+const LOWCLOUD = '<g transform="translate(1.8 -1.2) scale(.85)">'+CLOUD+'</g>';
+const ICONS = {
+  sun:'<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.3M12 19.2v2.3M2.5 12h2.3M19.2 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/>',
+  moon:MOON,
+  sunCloud:'<circle cx="7" cy="7" r="2.5"/><path d="M7 1.6v1.2M1.6 7h1.2M3.2 3.2l.9.9M10.8 3.2l-.9.9"/><g transform="translate(6 6) scale(.7)">'+CLOUD+'</g>',
+  moonCloud:'<g transform="translate(1.5 1.5) scale(.42)">'+MOON+'</g><g transform="translate(6 6) scale(.7)">'+CLOUD+'</g>',
+  cloud:CLOUD,
+  fog:'<path d="M4 8h16M6 12h12M4 16h16M7 20h10"/>',
+  rain:LOWCLOUD+'<path d="M8 17.5l-1 3M12 17.5l-1 3M16 17.5l-1 3"/>',
+  thunder:LOWCLOUD+'<path d="M12.8 15.2l-2.6 3.4h3.2l-2 3.4"/>',
+  sleet:LOWCLOUD+'<path d="M8 17.5l-1 3M16 17.5l-1 3"/>'+DOTS([[12,18],[12,21]]),
+  snow:LOWCLOUD+DOTS([[8,18],[12,18],[16,18],[10,21],[14,21]])
+};
+function wxIcon(name,day,text){
+  const key = !day && name==="sun" ? "moon" : !day && name==="sunCloud" ? "moonCloud" : name;
+  return `<svg class="wicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="${text}"><title>${text}</title>${ICONS[key]||ICONS.cloud}</svg>`;
+}
+const fmtTemp = t => { const n = Math.round(t); return (n<0?"−":"")+Math.abs(n)+"°"; };
+function wxCell(r){
+  if (!r.wx) return "–";
+  return `<div class="wx">${wxIcon(r.wx.icon,r.day,r.wx.text)}<span>${r.tmp==null?"–":fmtTemp(r.tmp)}</span></div>`;
+}
+
+// SMHI:s symbolkoder (1–27)
+function smhiSym(c){
+  c = Math.round(c);
+  const T = ["","Klart","Mestadels klart","Växlande molnighet","Halvklart","Molnigt","Mulet","Dimma",
+    "Lätta regnskurar","Måttliga regnskurar","Kraftiga regnskurar","Åska",
+    "Lätta skurar med snöblandat regn","Måttliga skurar med snöblandat regn","Kraftiga skurar med snöblandat regn",
+    "Lätta snöbyar","Måttliga snöbyar","Kraftiga snöbyar","Lätt regn","Måttligt regn","Kraftigt regn","Åska",
+    "Lätt snöblandat regn","Måttligt snöblandat regn","Kraftigt snöblandat regn",
+    "Lätt snöfall","Måttligt snöfall","Kraftigt snöfall"];
+  if (!T[c]) return null;
+  const icon = c<=2?"sun" : c<=4?"sunCloud" : c<=6?"cloud" : c===7?"fog" : c<=10?"rain"
+    : (c===11||c===21)?"thunder" : c<=14?"sleet" : c<=17?"snow" : c<=20?"rain" : c<=24?"sleet" : "snow";
+  return {icon, text:T[c]};
+}
+// WMO-koder (Open-Meteo), används som reserv
+function wmoSym(c){
+  const m = {0:["sun","Klart"],1:["sun","Mestadels klart"],2:["sunCloud","Växlande molnighet"],3:["cloud","Mulet"],
+    45:["fog","Dimma"],48:["fog","Rimfrostdimma"],51:["rain","Lätt duggregn"],53:["rain","Duggregn"],55:["rain","Kraftigt duggregn"],
+    56:["sleet","Underkylt duggregn"],57:["sleet","Underkylt duggregn"],61:["rain","Lätt regn"],63:["rain","Regn"],65:["rain","Kraftigt regn"],
+    66:["sleet","Underkylt regn"],67:["sleet","Underkylt regn"],71:["snow","Lätt snöfall"],73:["snow","Snöfall"],75:["snow","Kraftigt snöfall"],
+    77:["snow","Snökorn"],80:["rain","Lätta regnskurar"],81:["rain","Regnskurar"],82:["rain","Kraftiga regnskurar"],
+    85:["snow","Snöbyar"],86:["snow","Kraftiga snöbyar"],95:["thunder","Åska"],96:["thunder","Åska med hagel"],99:["thunder","Åska med hagel"]};
+  const e = m[c];
+  return e ? {icon:e[0], text:e[1]} : null;
+}
+
+// Lokal tid i tabellen (t.ex. "2026-11-18T15:00") till UTC-millisekunder
+const tzFmt = new Intl.DateTimeFormat("sv-SE",{timeZone:TZ,hourCycle:"h23",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"});
+function localToUtcMs(t){
+  const guess = Date.parse(t+":00Z");
+  const local = Date.parse(tzFmt.format(new Date(guess)).replace(" ","T")+"Z");
+  return guess - (local - guess);
+}
+async function loadSmhi(s){
+  const url = `https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/${s.lon.toFixed(6)}/lat/${s.lat.toFixed(6)}/data.json`;
+  const r = await fetch(url,{signal:AbortSignal.timeout(8000)});
+  if (!r.ok) throw new Error("SMHI HTTP "+r.status);
+  const j = await r.json();
+  const list = (j.timeSeries||[]).map(e=>({ms:Date.parse(e.time), t:e.data&&e.data.air_temperature, c:e.data&&e.data.symbol_code}))
+    .filter(e=>!isNaN(e.ms));
+  if (!list.length) throw new Error("SMHI utan data");
+  return list;
+}
+// SMHI har timsteg bara de första 48 timmarna, därefter 2, 6 och 12 timmar. Närmaste tidpunkt används.
+function nearestSmhi(list,ms){
+  let best = null, bd = Infinity;
+  for (const e of list){ const d = Math.abs(e.ms-ms); if (d<bd){bd = d; best = e;} }
+  return best;
+}
+
+// ---- Data ----
+async function loadSpot(s){
+  if (TEST){ wxSource = "fejkad testdata"; return makeTestRows(); }
+  const base = {latitude:s.lat, longitude:s.lon, timezone:TZ, forecast_days:DAYS};
+  const [m,w] = await Promise.all([
+    getJSON("https://marine-api.open-meteo.com/v1/marine",
+      {...base, hourly:"wave_height,wave_direction,wave_period,wind_wave_height,wind_wave_direction,wind_wave_period,swell_wave_height,swell_wave_direction,swell_wave_period"}),
+    getJSON("https://api.open-meteo.com/v1/forecast",
+      {...base, hourly:"wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,weather_code,is_day", wind_speed_unit:"ms"})
+  ]);
+  const mh = m.hourly, wh = w.hourly;
+  const rows = mh.time.map((t,i)=>({
+    t, h:mh.wave_height[i], d:mh.wave_direction[i], p:mh.wave_period[i],
+    ww:{h:(mh.wind_wave_height||[])[i], d:(mh.wind_wave_direction||[])[i], p:(mh.wind_wave_period||[])[i]},
+    sw:{h:(mh.swell_wave_height||[])[i], d:(mh.swell_wave_direction||[])[i], p:(mh.swell_wave_period||[])[i]},
+    ws:wh.wind_speed_10m[i], wd:wh.wind_direction_10m[i], wg:wh.wind_gusts_10m[i],
+    day:wh.is_day[i]===1, tmp:wh.temperature_2m[i], wx:wmoSym(wh.weather_code[i])
+  }));
+  wxSource = "Open-Meteo";
+  try {
+    const smhi = await loadSmhi(s);
+    rows.forEach(r=>{
+      const e = nearestSmhi(smhi,localToUtcMs(r.t));
+      const sym = e && e.c!=null ? smhiSym(e.c) : null;
+      if (sym) r.wx = sym;
+      if (e && e.t!=null) r.tmp = e.t;
+    });
+    wxSource = "SMHI";
+  } catch (err) {
+    wxSource = "Open-Meteo (SMHI gick inte att hämta)";
+  }
+  return rows;
+}
+function nowIndex(rows){
+  const key = new Date().toLocaleString("sv-SE",{timeZone:TZ}).slice(0,13).replace(" ","T");
+  const i = rows.findIndex(r=>r.t.startsWith(key));
+  return i<0 ? 0 : i;
+}
+
+// ---- Rendering ----
+function compass(s,r){
+  const span = (((s.to-s.from)%360)+360)%360;
+  const [x1,y1] = pt(s.from,40), [x2,y2] = pt(s.to,40);
+  const letters = [["N",0],["Ö",90],["S",180],["V",270]].map(([l,a])=>{
+    const [x,y] = pt(a,54);
+    return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="8" fill="var(--muted)">${l}</text>`;
+  }).join("");
+  // Extra intervall som gäller vid stora vågor (t.ex. N–NO): ljusare blå yta.
+  let big = "";
+  if (s.big) {
+    const bs = (((s.big.to-s.big.from)%360)+360)%360;
+    const [bx1,by1] = pt(s.big.from,40), [bx2,by2] = pt(s.big.to,40);
+    big = `<path d="M60 60 L${bx1} ${by1} A40 40 0 ${bs>180?1:0} 1 ${bx2} ${by2} Z" fill="var(--water-light)"/>`;
+  }
+  const arrow = r.d==null ? "" :
+    `<g transform="rotate(${r.d} 60 60)"><path d="M60 31 L53.5 14 L60 19 L66.5 14 Z" fill="var(--c-good)" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></g>`;
+  return `<svg class="compass" viewBox="0 0 120 120" role="img"
+    aria-label="Vågor från ${dirName(r.d)}, ${fmt(r.h)} meter. ${s.name} fungerar på vågor från ${dirName(s.from)} till ${dirName(s.to)}.">
+    <defs><pattern id="hatch" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#cfcfcf" stroke-width="1.1"/></pattern></defs>
+    <circle cx="60" cy="60" r="40" fill="url(#hatch)"/>
+    ${big}
+    <path d="M60 60 L${x1} ${y1} A40 40 0 ${span>180?1:0} 1 ${x2} ${y2} Z" fill="var(--water)"/>
+    <circle cx="60" cy="60" r="40" fill="none" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+    ${letters}${arrow}
+    <text x="60" y="60" text-anchor="middle" dominant-baseline="central" font-size="19" fill="#000" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">${fmt(r.h)}</text>
+  </svg>`;
+}
+
+// Offshore: vind från land (eller snett från land) när vågorna är över 1,0 m och betyget är minst 3 stjärnor.
+// Rakt offshore = motsatt riktning mot mitten av spotens vågintervall; snett = upp till OFFSHORE_HALF grader från den.
+const OFFSHORE_MIN_WAVE = 1.0, OFFSHORE_HALF = 67.5;
+function isOffshore(r,s){
+  if (!s || r.h==null || r.wd==null || !(r.h>OFFSHORE_MIN_WAVE) || grade(r).stars<3) return false;
+  const span = (((s.to-s.from)%360)+360)%360;
+  const offshore = (s.from + span/2 + 180) % 360;
+  const diff = Math.abs((((r.wd-offshore)%360)+540)%360-180);
+  return diff <= OFFSHORE_HALF;
+}
+// Vindpilens färg efter vindstyrka (m/s): 7–9 gul, 9–12 orange, över 12 lila.
+function windColor(ws){
+  if (ws==null) return null;
+  return ws>12 ? "#df02f9" : ws>9 ? "#f93602" : ws>=7 ? "#efbf17" : null;
+}
+function windArrow(deg,ws){
+  if (deg==null) return "";
+  return `<svg class="warrow" viewBox="0 0 20 20" style="transform:rotate(${deg+180}deg)" aria-hidden="true"><path d="M10 2 L15.5 17 L10 13.5 L4.5 17 Z" fill="${windColor(ws)||"currentColor"}"/></svg>`;
+}
+
+const ARROW_POINTS = "575 203 1 200 0 245 565 245 407 403 442 438 661 220 660 219 626 185 442 0 407 35 575 203";
+// Pil för tabellen. d = riktning varifrån vågen/vinden kommer; pilen pekar åt det håll den rör sig.
+function dirArrow(d,fill,label){
+  if (d==null) return "–";
+  // Pilen i ARROW_POINTS (från arrow.svg) pekar åt höger; +90° gör att 0° (från norr) pekar nedåt.
+  return `<svg class="tarrow" viewBox="0 -111.5 661 661" role="img" aria-label="${label} ${dirName(d)}">
+    <title>${dirName(d)} ${Math.round(d)}°</title>
+    <g transform="rotate(${d+90} 330.5 219)"><polygon points="${ARROW_POINTS}" fill="${fill}" fill-rule="evenodd"/></g></svg>`;
+}
+
+function spotHTML(s,res,idx){
+  const head = `<h2>${s.name}</h2>`;
+  if (res.error) return `<section class="spot"><div class="left">${head}</div>
+    <p class="err">Kunde inte hämta data (${res.error}). Kontrollera nätverket och tryck Uppdatera.</p></section>`;
+  const rows = res.rows;
+  if (rows.every(x=>x.h==null)) return `<section class="spot"><div class="left">${head}</div>
+    <p class="err">Inga vågdata för den här punkten. Den ligger troligen på land, så flytta den en bit ut på vattnet.</p></section>`;
+  const ni = nowIndex(rows);
+  sel[idx] = ni;
+  return `<section class="spot">
+    <div class="right">
+      <div class="topstats">
+        <div class="stats" id="stats-${idx}">${statsHTML(rows[ni],s)}</div>
+        <div class="side" id="left-${idx}">${leftHTML(s,rows,ni,idx)}</div>
+      </div>
+      <div class="comps" id="comps-${idx}">${compHTML(rows[ni])}</div>
+      <div class="charthead">
+        <p class="when" id="when-${idx}">${whenText(rows,ni)}</p>
+      </div>
+      <div class="chart" data-kind="wave" data-idx="${idx}"></div>
+    </div>
+    <div class="hourly">${hourlyHTML(s,rows)}</div>
+  </section>`;
+}
+
+const addDay = (k,n) => {
+  const d = new Date(k+"T12:00");
+  d.setDate(d.getDate()+n);
+  return d.toLocaleDateString("sv-SE");
+};
+
+function hourlyHTML(s,rows){
+  const ni = nowIndex(rows);
+  const today = new Date().toLocaleDateString("sv-SE",{timeZone:TZ});
+  const tomorrow = addDay(today,1);
+  const days = new Map();
+  rows.forEach((r,i)=>{
+    if (i<ni) return;
+    const k = r.t.slice(0,10);
+    if (!days.has(k)) days.set(k,[]);
+    days.get(k).push([r,i]);
+  });
+  let out = "";
+  days.forEach((list,k)=>{
+    const dd = new Date(k+"T12:00");
+    const short = `${WD[dd.getDay()]} ${dd.getDate()} ${MN[dd.getMonth()]}`;
+    const tag = k===today ? "Idag" : k===tomorrow ? "Imorgon" : "";
+    const title = tag ? `${tag}, ${short[0].toLowerCase()+short.slice(1)}` : short;
+    const body = list.map(([r,i])=>{
+      const g = grade(r);
+      return `<tr class="c-${g.cls}${i===ni?" now":""}">
+        <td>${r.t.slice(11,16)}${i===ni?'<span class="nu"> (nu)</span>':""}</td>
+        <td><div class="wx"><span>${fmt(r.h)}</span><span class="per">${fmt(r.p,0)} s</span>${dirArrow(r.d,"var(--ink)","Vågor från")}</div></td>
+        <td>${r.sw && r.sw.h!=null ? `<div class="wx"><span>${fmt(r.sw.h)}</span><span class="per">${r.sw.p==null?"–":fmt(r.sw.p,0)} s</span>${dirArrow(r.sw.d,"var(--ink)","Dyning från")}</div>` : "–"}</td>
+        <td><div class="wx"><span>${fmt(r.ws)}</span>${windArrow(r.wd,r.ws)}${isOffshore(r,s)?'<span class="offtag"><span class="offword">Offshore</span>!</span>':""}</div></td>
+        <td>${wxCell(r)}</td>
+        <td class="stars">${g.stars?`<span aria-label="${g.stars} av 5 stjärnor${g.reduced?", sänkt på grund av vågriktning":""}">${g.reduced?"~":""}${"★".repeat(g.stars)}</span>`:""}</td></tr>`;
+    }).join("");
+    out += `<div class="day"><div class="tablewrap"><table>
+      <thead><tr><th class="daytitle">${title}</th><th>Vindvåg</th><th>Dyning</th><th>Vind m/s</th><th>Väder</th><th></th></tr></thead>
+      <tbody>${body}</tbody></table></div></div>`;
+  });
+  return out;
+}
+
+const WD = ["Sön","Mån","Tis","Ons","Tors","Fre","Lör"];
+const MN = ["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"];
+function whenText(rows,i){
+  const r = rows[i], isNow = i===nowIndex(rows);
+  const d = new Date(r.t.slice(0,10)+"T12:00");
+  return isNow ? "Nu, "+r.t.slice(11,16) : `${WD[d.getDay()]} ${d.getDate()} ${MN[d.getMonth()]}, ${r.t.slice(11,16)}`;
+}
+function leftHTML(s,rows,i,idx){
+  return compass(s,rows[i]);
+}
+function compHTML(r){
+  const one = (name,c) => {
+    if (!c || c.h==null) return `<span><b>${name}</b> saknas</span>`;
+    return `<span><b>${name}</b> ${fmt(c.h)} m · ${c.p==null?"–":fmt(c.p,0)} s · ${windArrow(c.d)} ${dirName(c.d)}</span>`;
+  };
+  return one("Vindvågor",r.ww) + one("Dyning",r.sw);
+}
+function statsHTML(r,s){
+  const comp = (name,c) => {
+    const ok = s && c && c.d!=null && c.h!=null && inWin(c.d,s.from,s.to);
+    const has = c && c.h!=null;
+    return `<div class="stat"><b${ok?' style="color:var(--water)"':''}>${has?fmt(c.h):"–"}</b>${has?"<small>m</small>":""}<span>${name}</span>`
+      + (has ? `<span class="cdetail">${c.p==null?"–":fmt(c.p,0)} s · ${dirName(c.d)}</span>` : "") + `</div>`;
+  };
+  return comp("Vindvågor",r.ww) + comp("Dyning",r.sw)
+    + `<div class="stat"><b>${fmt(r.ws)}</b><small>m/s</small>${isOffshore(r,s)?'<small class="offs">Offshore!</small>':""}<span>${windArrow(r.wd,r.ws)}Vind från ${dirName(r.wd)}</span></div>`
+    + (r.wx ? `<div class="stat"><b class="wxb">${wxIcon(r.wx.icon,r.day,r.wx.text)}${r.tmp==null?"–":fmtTemp(r.tmp)}</b><span>${r.wx.text}</span></div>` : "");
+}
+// Placerar texten (.when) centrerad över dragrutan, inom diagrammets bredd.
+function positionWhen(idx){
+  const el = document.querySelector(`.chart[data-idx="${idx}"]`), w = $("#when-"+idx);
+  if (!el || !w || !el.dataset.bw) return;
+  const x = sel[idx]*(+el.dataset.bw) + (+el.dataset.bw)/2;
+  const left = Math.max(0, Math.min(el.clientWidth - w.offsetWidth, x - w.offsetWidth/2));
+  w.style.left = left + "px";
+}
+function setSelected(idx,i){
+  const rows = state[idx].rows;
+  i = Math.max(0,Math.min(rows.length-1,i));
+  if (sel[idx]===i) return;
+  sel[idx] = i;
+  $("#left-"+idx).innerHTML = leftHTML(SPOTS[idx],rows,i,idx);
+  $("#when-"+idx).textContent = whenText(rows,i);
+  positionWhen(idx);
+  $("#stats-"+idx).innerHTML = statsHTML(rows[i],SPOTS[idx]);
+  $("#comps-"+idx).innerHTML = compHTML(rows[i]);
+  document.querySelectorAll(`.chart[data-idx="${idx}"]`).forEach(el=>{
+    const bw = +el.dataset.bw, x = i*bw + bw/2;
+    el.querySelectorAll("rect.sel").forEach(r=>r.setAttribute("x",x-5));
+  });
+}
+
+let sel = [];
+let state = [];
+
+function frame(rows,W,H,B,ni,grid,unit,si){
+  const n = rows.length, bw = W/n;
+  let out = "";
+  grid.forEach(([v,y])=>{
+    out += `<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/>
+      <text x="${W}" y="${y-3}" text-anchor="end" font-size="12" fill="var(--muted)">${fmt(v,v%1?1:0)} ${unit}</text>`;
+  });
+  rows.forEach((r,i)=>{
+    if (r.t.endsWith("T00:00")){
+      const x = i*bw;
+      const day = new Date(r.t.slice(0,10)+"T12:00").toLocaleDateString("sv-SE",{weekday:"short"});
+      out += `<line x1="${x}" x2="${x}" y1="0" y2="${H-B}" stroke="var(--line)" stroke-width="1"/>
+        <text x="${x+4}" y="${H-5}" font-size="12" fill="var(--muted)">${day}</text>`;
+    }
+  });
+  const nx = ni*bw + bw/2, sx = si*bw + bw/2;
+  return {out, bw,
+    nowLine:`<line x1="${nx}" x2="${nx}" y1="0" y2="${H-B}" stroke="#f90595" stroke-width="2" stroke-dasharray="5 3"/>`,
+    selLine:`<rect class="sel" x="${sx-5}" y="-9.5" width="10" height="${H-B+19}" fill="none" stroke="#000" stroke-width="1"/>`};
+}
+
+// Kompakt desktop-läge (bärbara skärmar): lägre diagram så att det syns utan scroll.
+const COMPACT = matchMedia("(min-width:861px) and (max-height:1050px)");
+function waveChart(rows,s,W,idx){
+  const H=COMPACT.matches?210:300, B=22, T=18, ni=nowIndex(rows);
+  const max = Math.max(2.5, ...rows.map(r=>r.h||0));
+  const y = v => (H-B) - v/max*(H-B-T);
+  const grid = [0.5,1,1.5,2,2.5,3,4,5].filter(v=>v<=max).map(v=>[v,y(v)]);
+  const f = frame(rows,W,H,B,ni,grid,"m",sel[idx]);
+  const bars = rows.map((r,i)=>{
+    const h = (r.h||0)/max*(H-B-T);
+    const g = grade(r), fillc = g.cls==="blue" ? "var(--off)" : `var(--g-${g.cls})`;
+    return `<rect x="${i*f.bw+.5}" y="${H-B-h}" width="${Math.max(1,f.bw-1)}" height="${h}" rx="1" fill="${fillc}">
+      <title>${r.t.slice(8,10)}/${r.t.slice(5,7)} kl ${r.t.slice(11,16)}: ${fmt(r.h)} m från ${dirName(r.d)}${g.stars?" – "+g.stars+" "+(g.stars===1?"stjärna":"stjärnor"):""}</title></rect>`;
+  }).join("");
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Våghöjd per timme för ${s.name}">${f.out}${bars}${f.nowLine}${f.selLine}</svg>`;
+}
+
+function drawCharts(){
+  document.querySelectorAll(".chart").forEach(el=>{
+    const res = state[+el.dataset.idx];
+    if (!res || !res.rows) return;
+    const W = Math.floor(el.clientWidth);
+    if (W < 100) return;
+    const idx = +el.dataset.idx;
+    el.dataset.bw = W/res.rows.length;
+    el.innerHTML = waveChart(res.rows,SPOTS[idx],W,idx);
+    positionWhen(idx);
+    if (el.dataset.bound) return;
+    el.dataset.bound = "1";
+    el.tabIndex = 0;
+    el.setAttribute("aria-label","Välj timme genom att dra över diagrammet eller använda piltangenterna");
+    let drag = false;
+    const at = e => {
+      const b = el.getBoundingClientRect();
+      setSelected(idx, Math.floor((e.clientX-b.left)/b.width*res.rows.length));
+    };
+    el.addEventListener("pointerdown", e=>{drag = true; el.setPointerCapture(e.pointerId); at(e);});
+    el.addEventListener("pointermove", e=>{if (drag) at(e);});
+    el.addEventListener("pointerup", ()=>{drag = false;});
+    el.addEventListener("pointercancel", ()=>{drag = false;});
+    el.addEventListener("keydown", e=>{
+      const step = {ArrowLeft:-1, ArrowRight:1}[e.key];
+      if (step){e.preventDefault(); setSelected(idx, sel[idx]+step);}
+    });
+  });
+}
+
+async function refresh(){
+  $("#updated").textContent = "7-dygnsprognos, hämtar data…";
+  const results = await Promise.allSettled(SPOTS.map(loadSpot));
+  state = results.map(r => r.status==="fulfilled" ? {rows:r.value} : {error:r.reason.message});
+  $("#spots").innerHTML = SPOTS.map((s,i)=>spotHTML(s,state[i],i)).join("");
+  drawCharts();
+  renderBanner();
+  $("#wxsrc").textContent = wxSource ? " Väder och temperatur: "+wxSource+"." : "";
+  $("#updated").textContent = (TEST ? "Fejkad testdata, uppdaterad" : "7-dygnsprognos uppdaterad") + " kl " +
+    new Date().toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"});
+}
+
+$("#reload").addEventListener("click", refresh);
+window.addEventListener("hashchange", ()=>location.reload());
+let rt; window.addEventListener("resize", ()=>{clearTimeout(rt); rt=setTimeout(drawCharts,150);});
+setInterval(refresh, REFRESH_MINUTES*60*1000);
+refresh();
+</script>
+</body>
+</html>
