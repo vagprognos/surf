@@ -255,17 +255,17 @@ td.stars{white-space:nowrap; letter-spacing:.08em}
   td{padding-top:calc(.45rem + 4px); padding-bottom:calc(.45rem + 4px)}
 }
 /* Skalan i meter ligger till höger om diagrammet */
-@media (max-width:860px){
-  /* Mobil: bara dagens rubrik sitter fast, inte kolumnrubrikerna */
-  thead{position:static}
-  .mtitle{position:sticky; top:0; z-index:3; background:var(--bg); padding-top:.4rem; margin-top:calc(20px - .4rem)}
-}
 .daysrow,.charthead,.chart{margin-right:42px}
 .chart{width:auto}
 th.daytitle{text-transform:none}
 .tablewrap{overflow-x:visible}
 thead{position:sticky; top:0; z-index:3}
 thead th{background:var(--bg)}
+@media (max-width:860px){
+  /* Mobil: bara dagens rubrik sitter fast, inte kolumnrubrikerna */
+  thead{position:static}
+  .mtitle{position:sticky; top:0; z-index:3; background:var(--bg); padding-top:.4rem; margin-top:calc(20px - .4rem)}
+}
 </style>
 </head>
 <body>
